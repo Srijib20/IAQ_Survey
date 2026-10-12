@@ -1,0 +1,29 @@
+rules_version = '2';
+
+// Paste into Firebase console → Firestore Database → Rules, then Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Anyone with the survey link can submit one response per respondent ID.
+    // Nobody can read, change or delete responses from the browser —
+    // researchers read them in the Firebase console or with the Admin SDK.
+    match /responses/{respondentId} {
+      allow create: if isValidResponse(respondentId);
+      allow read, update, delete: if false;
+    }
+
+    function isValidResponse(id) {
+      let d = request.resource.data;
+      return d.keys().hasAll(['instrument', 'respondentId', 'answers', 'design', 'receivedAt'])
+        && d.keys().hasOnly(['instrument', 'respondentId', 'channel', 'startedAt', 'consentAt',
+             'submittedAt', 'elapsedSec', 'activeSec', 'secondsByScreen', 'recruitment', 'quality',
+             'design', 'config', 'answers', 'client', 'receivedAt'])
+        && d.respondentId == id
+        && d.instrument is string
+        && d.answers is map
+        && d.answers.consent == true
+        && d.answers.size() < 400
+        && d.receivedAt == request.time;
+    }
+  }
+}

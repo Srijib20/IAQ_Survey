@@ -1,0 +1,8 @@
+# Firebase web config — injected from the FIREBASE_CONFIG secret at deploy time
+js/firebase-config.js
+
+# Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
