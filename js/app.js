@@ -8,7 +8,7 @@
   const CFG = window.SURVEY_CONFIG;
   const STATE_KEY = 'iaq-survey-v1';
   const SUB_KEY = 'iaq-survey-submissions';
-  const INSTRUMENT_VERSION = 'first-draft-2026-09-23';
+  const INSTRUMENT_VERSION = 'first-draft-2026-09-23/taxonomy-2026-10-29';
   const params = new URLSearchParams(location.search);
   const DEBUG = params.has('debug');
 
@@ -143,16 +143,21 @@
     // MaxDiff: BIBD sets in random order, random position within set
     const maxdiff = shuffle(D.MAXDIFF).map((s) => ({ set: s.set, items: shuffle(s.items) }));
 
-    // Closed card sort: stratified 2 per cluster + wild card(s)
-    const n = CFG.cardSortCount || 15;
-    let cards = [];
-    ids.forEach((c) => cards.push(...shuffle(D.QUERIES.filter((q) => q.c === c)).slice(0, 2).map((q) => q.id)));
-    const rest = shuffle(D.QUERIES.map((q) => q.id).filter((id) => !cards.includes(id)));
-    cards = shuffle(cards.concat(rest.slice(0, Math.max(0, n - cards.length))));
-
+    const cards = pickCards();
     const utaut = shuffle(D.UTAUT.filter((u) => !u.pricing || CFG.pricingInScope).map((u) => u.id));
 
     return { orderB: shuffle(ids), orderC: shuffle(ids), kano, maxdiff, cards, utaut };
+  }
+
+  // Closed card sort: `cardSortPerCluster` random queries from each cluster,
+  // then wild cards drawn from the rest of the pool up to `cardSortCount`.
+  function pickCards() {
+    const n = CFG.cardSortCount || 15;
+    const k = CFG.cardSortPerCluster != null ? CFG.cardSortPerCluster : 1;
+    let cards = [];
+    D.CLUSTERS.forEach((c) => cards.push(...shuffle(D.QUERIES.filter((q) => q.c === c.id)).slice(0, k).map((q) => q.id)));
+    const rest = shuffle(D.QUERIES.map((q) => q.id).filter((id) => !cards.includes(id)));
+    return shuffle(cards.concat(rest.slice(0, Math.max(0, n - cards.length))));
   }
 
   /* ---------------- Rendering helpers ---------------- */
@@ -226,10 +231,6 @@
   }
   function textInput(key, ph = '') {
     return `<input class="field" data-q="${key}" value="${esc(S.answers[key] || '')}" placeholder="${esc(ph)}" maxlength="200" />`;
-  }
-  function money(key) {
-    const v = S.answers[key];
-    return `<div class="money"><span>₹</span><input class="field" type="number" inputmode="numeric" min="0" step="1" data-q="${key}" value="${v != null ? esc(v) : ''}" placeholder="0" /></div>`;
   }
 
   const AGREE = { anchors: ['Strongly disagree', 'Strongly agree'], labels: D.AGREE7 };
@@ -406,15 +407,11 @@
     /* ---- Section D1: Kano pairs ---- */
     d.kano.forEach((kid, i) => {
       const f = kanoById(kid);
-      const cl = clusterById(f.c);
       L.push({
         id: 'D-' + kid, sec: 'D', auto: true,
         render: () =>
-          `<div class="card" style="--c:${cl.color}">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
-              <span class="cl-tag">${icon(cl.icon)} ${esc(cl.short)}</span>
-              <span class="eyebrow" style="margin:0">Feature ${i + 1} of ${d.kano.length}</span>
-            </div>
+          `<div class="card">
+            <div class="eyebrow" style="margin-bottom:6px">Feature ${i + 1} of ${d.kano.length}</div>
             ${q(kid + '_f', `<span class="pill can">CAN</span> If the assistant <b>could</b> ${esc(f.f)}, how would you feel?`, kanoOpts(kid + '_f'), { code: kid + ' functional' })}
             ${q(kid + '_d', `<span class="pill cannot">CANNOT</span> If the assistant <b>could NOT</b> ${esc(f.f)}, how would you feel?`, kanoOpts(kid + '_d'), { code: kid + ' dysfunctional' })}
           </div>`,
@@ -500,42 +497,6 @@
           }).join('')}
         </div>`,
       required: () => d.utaut.map((id) => 'F1_' + id),
-    });
-
-    /* ---- Section F2: calibrated demand ---- */
-    L.push({
-      id: 'F-2', sec: 'F', title: 'Would you get one?',
-      render: () =>
-        `<div class="card">
-          ${q('F2_1', 'If this assistant were available at a price you consider fair, what is the chance you would get one in the next 12 months?', scale('F2_1', 11, JUSTER), { code: 'F2.1' })}
-        </div>`,
-      required: () => ['F2_1'],
-    });
-
-    /* ---- Section F3 (optional pricing) + F4 commitment ---- */
-    const vw = D.VAN_WESTENDORP;
-    L.push({
-      id: 'F-3', sec: 'F', title: CFG.pricingInScope ? 'Price and pilot' : 'Join the pilot?',
-      lead: CFG.pricingInScope ? 'For the wearable device itself. There are no right answers — just your gut feeling, in rupees.' : '',
-      render: () =>
-        `${CFG.pricingInScope ? `<div class="card"><div class="price-grid">
-            ${vw.map((p) => q(p.id, esc(p.q), money(p.id), { code: p.id })).join('')}
-            <div class="warn-note" data-cond="vwOrder">${icon('sparkle')}<span>Just checking: usually “too cheap” &lt; “bargain” &lt; “getting expensive” &lt; “too expensive”. Fine to keep your answers if they’re what you meant.</span></div>
-          </div></div>` : ''}
-          <div class="card">
-            ${q('F4_1', 'Would you like to join the waitlist for a pilot of this assistant?',
-              `<div class="waitlist">${choices('F4_1', ['Yes', 'No'], { cols: 2 })}</div>`,
-              { hint: 'If yes, we’ll show you a separate sign-up form at the end. Your email is never linked to your answers.', code: 'F4.1' })}
-          </div>`,
-      conds: {
-        vwOrder: (a) => {
-          const [ex, ge, ba, ch] = vw.map((p) => a[p.id]);
-          if ([ex, ge, ba, ch].some((v) => v == null || Number.isNaN(v))) return false;
-          return !(ch <= ba && ba <= ge && ge <= ex);
-        },
-      },
-      required: () => (CFG.pricingInScope ? vw.map((p) => p.id) : []).concat('F4_1'),
-      validate: (a) => (CFG.pricingInScope && vw.some((p) => a[p.id] < 0) ? 'Prices can’t be negative.' : null),
     });
 
     /* ---- Section G: open feedback ---- */
@@ -779,7 +740,7 @@
           <h1>How does the air in your home <em>feel</em> to you?</h1>
           <p class="sub">We’re designing a wearable assistant you could ask about indoor air and health — by voice or text. Share your real experiences and help decide what it should do.</p>
           <div class="meta-chips">
-            <span class="meta-chip">${icon('clock')} About 17 minutes</span>
+            <span class="meta-chip">${icon('clock')} About 15 minutes</span>
             <span class="meta-chip">${icon('lock')} Anonymous</span>
             <span class="meta-chip">${icon('phone')} Works on your phone</span>
             ${CFG.incentiveText ? `<span class="meta-chip">${icon('gift')} ${esc(CFG.incentiveText)}</span>` : ''}
@@ -1055,9 +1016,8 @@
       activeSec: Math.round(activeMs / 1000),
       secondsByScreen: Object.fromEntries(Object.entries(S.times).map(([k, v]) => [k, Math.round(v / 100) / 10])),
       recruitment: assignGroup(a),
-      quality: { attentionCheckPassed: a.F1_ATT === 3 },
       design: S.design,
-      config: { pricingInScope: CFG.pricingInScope, askTopBenefit: CFG.askTopBenefit, kanoTotal: CFG.kanoTotal },
+      config: { pricingInScope: CFG.pricingInScope, askTopBenefit: CFG.askTopBenefit, kanoTotal: CFG.kanoTotal, cardSortPerCluster: CFG.cardSortPerCluster },
       answers: a,
       client: { userAgent: navigator.userAgent, language: navigator.language, screen: `${screen.width}x${screen.height}` },
     };
@@ -1106,7 +1066,6 @@
     trackTime();
     S.status = 'submitted';
     const payload = buildPayload();
-    const wantsPilot = S.answers.F4_1 === 'Yes';
     renderBare(`<section class="screen"><div class="card done"><span class="sending"><span class="spinner"></span>Sending your answers…</span></div></section>`);
 
     const result = await sendPayload(payload);
@@ -1114,7 +1073,7 @@
     console.log('[IAQ survey] response', payload);
     try { localStorage.removeItem(STATE_KEY); } catch (e) { /* ignore */ }
 
-    renderThanks(payload, wantsPilot);
+    renderThanks(payload);
     S = freshState();
     SAVED = false;
     SCREENS = buildScreens();
@@ -1123,21 +1082,12 @@
   function shareUrl() { return location.href.split(/[?#]/)[0]; }
   function shareText() { return 'I just took a short survey on indoor air at home by UbiNet Lab, IIT Kharagpur. Your experiences could help too:'; }
 
-  function renderThanks(payload, wantsPilot) {
+  function renderThanks(payload) {
     const wa = `https://wa.me/?text=${encodeURIComponent(shareText() + ' ' + shareUrl())}`;
-    const pilot = wantsPilot
-      ? `<div class="next-box"><b>Join the pilot waitlist</b>
-          <p>This opens a separate form. Your email is never linked to your survey answers.</p>
-          ${CFG.waitlistUrl
-            ? `<a class="btn accent" href="${esc(CFG.waitlistUrl)}" target="_blank" rel="noopener">Open the sign-up form ${icon('arrow')}</a>`
-            : `<p style="margin:0"><i>The sign-up form isn’t open yet — the research team will share the link soon.</i></p>`}
-        </div>`
-      : '';
     renderBare(`<section class="screen"><div class="card done">
       <div class="badge"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
       <h1>Thank you!</h1>
       <p>Your answers are in. They will directly shape what the assistant can do — and help make the air at home healthier for families like yours.</p>
-      ${pilot}
       <div class="next-box" style="background:linear-gradient(120deg,#e9f9f1,#f3f8ff)">
         <b>Know someone who should take this?</b>
         <p>Every response helps — especially from families with kids, older adults or anyone with asthma.</p>
@@ -1211,6 +1161,13 @@
     particles();
     const loaded = loadState();
     if (loaded) { S = loaded; SAVED = true; } else { S = freshState(); }
+    // A saved session may predate a change to the query pool: redraw its cards
+    if (!S.design.cards.every(queryById)) {
+      S.design.cards = pickCards();
+      delete S.answers.E1;
+    }
+    // ...or an item that has since been removed from Section F
+    S.design.utaut = S.design.utaut.filter((id) => D.UTAUT.some((u) => u.id === id));
     if (DEBUG && params.has('fresh')) { S = freshState(); SAVED = false; }
     SCREENS = buildScreens();
     if (DEBUG && params.has('screen')) {

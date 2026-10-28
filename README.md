@@ -17,13 +17,12 @@ Edit `window.SURVEY_CONFIG` at the top of `js/data.js`:
 |---|---|
 | `firebase` | Read from `js/firebase-config.js` (git-ignored; copy [js/firebase-config.example.js](js/firebase-config.example.js)). When present, each response is saved to Cloud Firestore as `responses/{respondentId}`. Publish [firestore.rules](firestore.rules) in the console first. |
 | `submitUrl` | Alternative to Firebase: an endpoint that receives each completed response as a JSON `POST`. With neither set, responses are kept in the browser's `localStorage` (`iaq-survey-submissions`) and logged to the console. |
-| `waitlistUrl` | Separate, unlinked pilot sign-up form (F4.1). |
 | `ethicsApprovalNo` | Shown in the consent text. |
 | `incentiveText` | e.g. `'₹150–200 voucher'`; shown on the landing page if set. |
-| `pricingInScope` | Toggles PV1 and the Van Westendorp block (F3). |
+| `pricingInScope` | Shows the PV1 price-value statement in Section F. |
 | `kanoTotal` | Kano pairs per respondent (14 by default; cut to 10 if the pilot runs long). |
 
-Also replace the placeholder `QUERIES` list in `js/data.js` with the ~120 queries from `taxonomy.txt` (keep the `c` and `sub` fields).
+The card-sort pool is the `TAXONOMY` list in `js/data.js` (from `Taxonomy.txt`: 7 domains, 37 sub-clusters, 110 queries). Each query gets an id such as `q1_1_05` (sub-cluster 1.1, 5th query); keep the order stable once data collection starts, or ids will shift.
 
 ## Useful URL parameters
 
@@ -33,7 +32,7 @@ Also replace the placeholder `QUERIES` list in `js/data.js` with the ~120 querie
 
 ## What each response contains
 
-Respondent ID, timestamps, active seconds per screen (for speeder checks), recruitment group (G1/G2/G3, plus a flag for respondents who qualify for both G1 and G2), attention-check result, the per-respondent randomization (cluster orders, Kano features drawn, MaxDiff set order and item positions, card-sort queries, UTAUT order) and all answers.
+Respondent ID, timestamps, active seconds per screen (for speeder checks), recruitment group (G1/G2/G3, plus a flag for respondents who qualify for both G1 and G2), the per-respondent randomization (cluster orders, Kano features drawn, MaxDiff set order and item positions, card-sort queries, UTAUT order) and all answers.
 
 ## Deploying to GitHub Pages
 

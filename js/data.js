@@ -14,17 +14,17 @@ window.SURVEY_CONFIG = {
   // (localStorage key "iaq-survey-submissions") and the console.
   submitUrl: null,
 
-  // Separate, unlinked waitlist form (F4.1). Shown on the thank-you screen
-  // only to respondents who answered "Yes".
-  waitlistUrl: null,
-
   ethicsApprovalNo: '___',
   incentiveText: '', // e.g. '₹150–200 voucher' — leave empty to hide
 
-  pricingInScope: true, // shows PV1 and the Van Westendorp block (F3)
+  pricingInScope: true, // shows the PV1 price-value statement in Section F
   askTopBenefit: true, // optional sixth item in Section C
   kanoTotal: 14, // pairs per respondent (cap 20); pilot may cut to 10
-  cardSortCount: 15, // 2 per cluster + 1 wild card
+  cardSortCount: 15, // queries each respondent sorts in E1
+  // Queries drawn from every cluster before the rest are filled at random.
+  // 1 gives every one of the 110 queries ≥30 sorts at N = 300; the draft's
+  // 2 leaves the 37 cluster-1 queries at ~19 (below Tullis & Wood's 20–30).
+  cardSortPerCluster: 1,
 };
 
 window.SURVEY = (function () {
@@ -44,7 +44,7 @@ window.SURVEY = (function () {
       intro: 'Quick reactions to possible features, then a few “most vs least useful” choices.' },
     { key: 'E', label: 'Categories', minutes: 3.0, icon: 'grid',
       intro: 'Help us check whether our categories make sense to you.' },
-    { key: 'F', label: 'Would you use it?', minutes: 2.5, icon: 'check',
+    { key: 'F', label: 'Would you use it?', minutes: 1.0, icon: 'check',
       intro: 'Your honest view on using an assistant like this.' },
     { key: 'G', label: 'Your thoughts', minutes: 1.0, icon: 'chat',
       intro: 'Almost done! Everything on this page is optional.' },
@@ -55,31 +55,31 @@ window.SURVEY = (function () {
     { id: 1, name: 'Personal Health & Physiological State', short: 'Personal health',
       color: '#d6589f', icon: 'heart',
       def: 'How the air may be affecting your own body: symptoms, sleep, comfort, focus, diet',
-      examples: ['Could the air be causing my headache right now?', 'Did my bedroom air affect last night’s sleep?'] },
+      examples: ['Could the dust from sweeping be why I keep sneezing?', 'Is the air in my room making my cough worse?'] },
     { id: 2, name: 'Household & Vulnerable-Member Care', short: 'Family care',
       color: '#ee9a35', icon: 'home',
       def: 'Keeping children, older adults and family members with health conditions safe',
-      examples: ['Is the air in the bedroom safe for my baby right now?', 'Is it okay to use this cleaner while Grandma is at home?'] },
+      examples: ['Is the incense from today’s puja safe for my asthmatic son?', 'Can my toddler play on the floor right after it is mopped?'] },
     { id: 3, name: 'Environmental Situational Awareness', short: 'Air right now',
       color: '#1ea896', icon: 'eye',
       def: 'What the air is like now, what caused changes, and how it compares',
-      examples: ['How clean is the air in the living room right now?', 'Is the air cleaner inside or outside at the moment?'] },
+      examples: ['How dusty is the air in the drawing room at the moment?', 'Did the mosquito coil make the bedroom air worse?'] },
     { id: 4, name: 'Behavioral & Routine Analytics', short: 'Habits & routines',
       color: '#7b68ee', icon: 'chart',
       def: 'How your habits (cooking, cleaning, time in rooms) affect the air over time',
-      examples: ['How much smoke did tonight’s cooking add?', 'When is the best time today to ventilate?'] },
+      examples: ['Does making rotis on the tawa add more smoke than boiling rice?', 'Does drying clothes indoors make the house more humid?'] },
     { id: 5, name: 'Intervention & Device Management', short: 'Devices & fixes',
       color: '#3b8ee6', icon: 'fan',
       def: 'Choosing, placing and running purifiers, sensors and fixes',
-      examples: ['Should I run the purifier or open a window now?', 'When should I change the purifier filter?'] },
+      examples: ['Is my purifier big enough for the living room?', 'Would a chimney over the stove help more than a purifier?'] },
     { id: 6, name: 'Predictive Alerts & Emergency Response', short: 'Alerts & hazards',
       color: '#e5484d', icon: 'bell',
       def: 'Warnings before air gets worse, and help in hazards',
-      examples: ['Will air quality worsen after I start cooking?', 'Is there a gas leak or CO risk right now?'] },
+      examples: ['Will tonight’s fireworks make the air inside unsafe?', 'Can you warn me before smoke from outside reaches my home?'] },
     { id: 7, name: 'System Trust & Meta', short: 'Trust & privacy',
       color: '#5b7083', icon: 'shield',
       def: 'Accuracy, confidence, sensors and privacy of the assistant itself',
-      examples: ['How confident are you in this advice?', 'Who can see my data?'] },
+      examples: ['How accurate is this sensor compared with a lab test?', 'Is my data shared with any company?'] },
   ];
 
   /* ---------------- Section A ---------------- */
@@ -115,9 +115,9 @@ window.SURVEY = (function () {
   /* ---------------- Section B ---------------- */
   const VIGNETTES = {
     1: { text: '…you felt a headache, drowsiness, stuffiness, or eye/throat irritation at home and wondered if the air was the cause.', src: '1.1, 1.3' },
-    2: { text: '…you wondered whether the air in a room was safe for a child, older adult, pregnant, or asthmatic family member, e.g. while someone was cooking or cleaning.', src: '2.1, 2.2, 2.5' },
+    2: { text: '…you wondered whether the air in a room was safe for a child, older adult, pregnant, or asthmatic family member, e.g. while someone was cooking or cleaning.', src: '2.1, 2.2, 2.6' },
     3: { text: '…you wondered how clean the air at home was right then, or whether it was cleaner inside or outside.', src: '3.1, 3.4' },
-    4: { text: '…you wondered how cooking, cleaning, or where you spent time affected the air, or when the best time to cook or ventilate would be.', src: '4.1, 4.3, 4.6' },
+    4: { text: '…you wondered how cooking, cleaning, or where you spent time affected the air, or when the best time to cook or ventilate would be.', src: '4.1, 4.2, 4.5' },
     5: { text: '…you had to decide whether to run a purifier or open a window, where to put a device, or when to change a filter.', src: '5.1, 5.2, 5.5' },
     6: { text: '…you wished you had been warned before the air got bad: outdoor smoke, strong cleaner fumes, or a possible gas smell.', src: '6.1, 6.3, 6.4' },
     7: { text: '…you doubted whether an air-quality reading or an app’s advice was accurate, or wondered who could see your data.', src: '7.1–7.3' },
@@ -145,13 +145,13 @@ window.SURVEY = (function () {
     { id: 'K3', c: 1, sub: '1.4', f: 'suggest what to eat or drink on high-pollution days' },
     { id: 'K4', c: 2, sub: '2.2', f: 'recommend the safest room for a vulnerable family member right now' },
     { id: 'K5', c: 2, sub: '2.3', f: 'link a family member’s inhaler use or attacks to pollution spikes' },
-    { id: 'K6', c: 2, sub: '2.5', f: 'check whether an activity (frying, a strong cleaner) is safe for everyone at home before you start' },
+    { id: 'K6', c: 2, sub: '2.6', f: 'check whether an activity (frying, a strong cleaner) is safe for everyone at home before you start' },
     { id: 'K7', c: 3, sub: '3.1', f: 'show the current air quality in each room' },
     { id: 'K8', c: 3, sub: '3.2', f: 'explain what caused a recent pollution spike' },
     { id: 'K9', c: 3, sub: '3.5', f: 'tell you whether it is safe to go outside or open windows, using outdoor data' },
     { id: 'K10', c: 4, sub: '4.1', f: 'show how a cooking method or session affected kitchen air' },
-    { id: 'K11', c: 4, sub: '4.6', f: 'suggest the best times today to cook, clean or ventilate' },
-    { id: 'K12', c: 4, sub: '4.8', f: 'give you a weekly exposure summary and track your goals' },
+    { id: 'K11', c: 4, sub: '4.5', f: 'suggest the best times today to cook, clean or ventilate' },
+    { id: 'K12', c: 4, sub: '4.7', f: 'give you a weekly exposure summary and track your goals' },
     { id: 'K13', c: 5, sub: '5.2', f: 'tell you whether to run the purifier or open a window right now' },
     { id: 'K14', c: 5, sub: '5.4', f: 'rank the top pollution sources in your home to fix first' },
     { id: 'K15', c: 5, sub: '5.5', f: 'tell you when to replace a filter and what running a device costs' },
@@ -182,72 +182,258 @@ window.SURVEY = (function () {
   ];
 
   /* ---------------- Section E1 — card-sort query pool ----------------
-     PLACEHOLDER: replace with the ~120 queries from taxonomy.txt, verbatim.
-     Keep `c` (intended cluster) and `sub` (sub-cluster) — they are not shown
-     to respondents but are needed for the agreement / confusion analysis. */
-  const QUERIES = [
-    { id: 'q1', c: 1, sub: '1.1', text: 'Why do I get a headache every evening at home?' },
-    { id: 'q2', c: 1, sub: '1.1', text: 'Could the air in my room be making my eyes itchy?' },
-    { id: 'q3', c: 1, sub: '1.2', text: 'Did the bedroom air affect my sleep last night?' },
-    { id: 'q4', c: 1, sub: '1.3', text: 'Why do I feel so drowsy while working in my study?' },
-    { id: 'q5', c: 1, sub: '1.3', text: 'Is the air making it harder for me to focus right now?' },
-    { id: 'q6', c: 1, sub: '1.4', text: 'What should I eat on days when pollution is high?' },
-    { id: 'q7', c: 2, sub: '2.1', text: 'Is the air in the nursery safe for my baby right now?' },
-    { id: 'q8', c: 2, sub: '2.2', text: 'Which room is safest for my grandmother this evening?' },
-    { id: 'q9', c: 2, sub: '2.3', text: 'Are my son’s asthma attacks linked to indoor pollution?' },
-    { id: 'q10', c: 2, sub: '2.4', text: 'Is it safe for me to stay in the kitchen while I am pregnant?' },
-    { id: 'q11', c: 2, sub: '2.5', text: 'Is it okay to use this floor cleaner with my toddler at home?' },
-    { id: 'q12', c: 3, sub: '3.1', text: 'How clean is the air in the living room right now?' },
-    { id: 'q13', c: 3, sub: '3.2', text: 'What caused the pollution spike at 8 pm yesterday?' },
-    { id: 'q14', c: 3, sub: '3.3', text: 'How does today’s air compare with last week?' },
-    { id: 'q15', c: 3, sub: '3.4', text: 'Is the air cleaner inside or outside right now?' },
-    { id: 'q16', c: 3, sub: '3.5', text: 'Is it safe to open the windows now?' },
-    { id: 'q17', c: 4, sub: '4.1', text: 'How much smoke did my tadka add to the kitchen air?' },
-    { id: 'q18', c: 4, sub: '4.2', text: 'Which of my recipes this week created the most pollution?' },
-    { id: 'q19', c: 4, sub: '4.3', text: 'Does sweeping raise the dust level in the house?' },
-    { id: 'q20', c: 4, sub: '4.4', text: 'Which room do I spend the most time in, and how is its air?' },
-    { id: 'q21', c: 4, sub: '4.6', text: 'When is the best time today to cook?' },
-    { id: 'q22', c: 4, sub: '4.8', text: 'How much pollution was I exposed to this week?' },
-    { id: 'q23', c: 5, sub: '5.1', text: 'Which air purifier size suits my bedroom?' },
-    { id: 'q24', c: 5, sub: '5.2', text: 'Should I run the purifier or open a window right now?' },
-    { id: 'q25', c: 5, sub: '5.3', text: 'Where should I place the sensor in my living room?' },
-    { id: 'q26', c: 5, sub: '5.4', text: 'What is the biggest pollution source in my home to fix first?' },
-    { id: 'q27', c: 5, sub: '5.5', text: 'When should I change my purifier filter?' },
-    { id: 'q28', c: 6, sub: '6.1', text: 'Will the air get worse if I start frying now?' },
-    { id: 'q29', c: 6, sub: '6.2', text: 'Will outdoor smoke reach my home tonight?' },
-    { id: 'q30', c: 6, sub: '6.3', text: 'Alert me if PM2.5 crosses a safe level.' },
-    { id: 'q31', c: 6, sub: '6.4', text: 'Is there a gas leak or CO risk right now?' },
-    { id: 'q32', c: 6, sub: '6.4', text: 'I smell gas — what should I do?' },
-    { id: 'q33', c: 7, sub: '7.1', text: 'How confident are you in this recommendation?' },
-    { id: 'q34', c: 7, sub: '7.1', text: 'Why should I trust this reading over my AQI app?' },
-    { id: 'q35', c: 7, sub: '7.2', text: 'Who can see my exposure data?' },
-    { id: 'q36', c: 7, sub: '7.2', text: 'Can I delete my data?' },
-    { id: 'q37', c: 7, sub: '7.3', text: 'Is my sensor reading correct, or does it need calibration?' },
+     Source: Taxonomy.txt (7 domains, 37 sub-clusters, 110 queries). Two
+     sub-clusters are numbered 4.7 in the file; Cooking Chronicles is 4.8 here.
+     Wording is verbatim except these fixes (agreed 2026-10-29):
+       1.3 “heat,humidity” → “heat, humidity”
+       1.4 “Approximately how much macro nutrients am I taking?”
+       2.1 “…limit today for because of…” → “…limit today because of…”
+       4.8 “How much healthy is the food which is being cooked?”,
+           “Can this food for all aged humans?”,
+           “Which specific types of person will get benefited for making…”
+     Each query gets a stable id from its sub-cluster and position, e.g.
+     q1_1_05. `c`, `sub`, `subName` and `facet` are never shown to
+     respondents; they feed the agreement analysis. */
+  const TAXONOMY = [
+    { c: 1, sub: '1.1', name: 'Symptom–Exposure Attribution', facets: {
+      'Acute mapping': [
+        'Why do I have a headache right now?',
+        'Why am I feeling drowsy this afternoon?',
+        'Is this throat irritation linked to something in the house?',
+        'Why do my eyes feel irritated since I got home?',
+      ],
+      'Chronic/cumulative risk': [
+        'How has my PM2.5 exposure trended this month?',
+        'Am I at elevated respiratory risk given my exposure history?',
+        'Has my long-term NO2 exposure increased since we moved rooms?',
+      ],
+      'Cognitive/productivity impact': [
+        'Is high CO2 in my study affecting my focus?',
+        'Why do I feel foggy during my afternoon work sessions?',
+        'Does poor ventilation correlate with my lower productivity days?',
+        'Do I perform better on days when my room has better ventilation?',
+      ],
+      'Exposure budget': [
+        'How much of today’s safe pollution budget have I used?',
+        'Can I afford to cook fried food again today?',
+        'How many “high-exposure” hours have I had this week?',
+        'Which activities have used most of my exposure budget this week?',
+      ],
+    } },
+    { c: 1, sub: '1.2', name: 'Sleep & Recovery', queries: [
+      'Did poor air quality affect my sleep last night?',
+      'What in my bedroom is disrupting my sleep?',
+      'Is CO2 buildup causing me to wake up tired?',
+      'Would an air purifier in the bedroom improve my sleep score?',
+    ] },
+    { c: 1, sub: '1.3', name: 'Comfort & Ambient Well-being', facets: {
+      'Thermal/humidity discomfort': [
+        'Why does this room feel stuffy?',
+        'Is humidity causing my discomfort?',
+        'Why does the living room feel clammy in the evenings?',
+      ],
+      'Ambient adjustment': [
+        'How can I make my bedroom feel more comfortable tonight?',
+        'What settings would improve comfort in the study right now?',
+      ],
+      'Multi-factor comfort diagnosis': [
+        'Is it the air quality or the temperature making me uneasy?',
+        'Is my discomfort from humidity, VOCs, or heat?',
+        'Are multiple factors like heat, humidity and air quality contributing to how I feel?',
+      ],
+    } },
+    { c: 1, sub: '1.4', name: 'Nutrition & Diet', facets: {
+      'Deficiency detection': [
+        'Am I lacking any nutrients based on recent meals?',
+        'Have I been eating enough protein this week?',
+        'Roughly how much of each macronutrient am I getting?',
+      ],
+      'Diet–pollution interaction': [
+        'What foods can offset today’s high exposure?',
+        'Should I eat differently on high-pollution days?',
+        'What to eat on high pollution days?',
+      ],
+      'Meal pattern': [
+        'Is my eating schedule irregular, and does it matter?',
+        'Am I skipping meals more often this month?',
+      ],
+      'Hydration': [
+        'Am I drinking enough water given today’s heat/pollution?',
+        'Has my water intake dropped compared to last week?',
+      ],
+    } },
+
+    { c: 2, sub: '2.1', name: 'Precondition-Specific Guidance', queries: [
+      'What can help my grandmother’s asthma today?',
+      'Is today good for her to go outside?',
+      'Should she avoid the kitchen while I’m cooking?',
+      'Are there any activities she should limit today because of the air quality?',
+    ] },
+    { c: 2, sub: '2.2', name: 'Zone/Room Recommendation', queries: [
+      'Where should preconditioned members spend most of their time?',
+      'Which room has the safest air for her right now?',
+      'Is the sunroom safer than the living room this afternoon?',
+    ] },
+    { c: 2, sub: '2.3', name: 'Trigger Correlation', queries: [
+      'Did her inhaler use correlate with a pollutant spike?',
+      'What was different in the air the last time she had an attack?',
+    ] },
+    { c: 2, sub: '2.4', name: 'Life-stage Specific', queries: [
+      'Is the nursery air suitable for my newborn?',
+      'Any precautions for a pregnant household member?',
+      'Is the elderly room’s air quality within safe limits?',
+    ] },
+    { c: 2, sub: '2.5', name: 'Comparative Exposure (multi-occupant)', queries: [
+      'Who had the highest exposure today?',
+      'Whose room has consistently worse air this week?',
+    ] },
+    { c: 2, sub: '2.6', name: 'Shared-space Negotiation', queries: [
+      'Is it safe for everyone if I fry fish tonight?',
+      'Can I use the strong-smelling cleaner while grandma’s home?',
+    ] },
+    { c: 2, sub: '2.7', name: 'Household-wide Recommendation', queries: [
+      'What single change most benefits everyone?',
+      'What’s the best ventilation schedule for the whole house?',
+    ] },
+
+    { c: 3, sub: '3.1', name: 'Current State', queries: [
+      'What’s my indoor air quality right now?',
+      'Which pollutant is highest in the living room?',
+      'Which room has the worst air quality currently?',
+    ] },
+    { c: 3, sub: '3.2', name: 'Source Attribution', queries: [
+      'What caused the PM2.5 spike an hour ago?',
+      'Is this VOC reading from cleaning or new furniture?',
+      'Why did CO2 suddenly rise in the bedroom?',
+    ] },
+    { c: 3, sub: '3.3', name: 'Historical Trends', queries: [
+      'How has kitchen air quality changed over the past week?',
+      'Has overall home air quality improved since I got the purifier?',
+    ] },
+    { c: 3, sub: '3.4', name: 'Benchmarking', queries: [
+      'How does my air compare to WHO/EPA limits?',
+      'Is it cleaner inside or outside right now?',
+      'How does today compare to last week?',
+    ] },
+    { c: 3, sub: '3.5', name: 'Outdoor/External Integration', queries: [
+      'Is it safe to run outside right now?',
+      'Should windows stay closed due to today’s pollen count?',
+      'What’s my expected pollution exposure on my commute?',
+    ] },
+
+    { c: 4, sub: '4.1', name: 'Cooking Behavior', queries: [
+      'How did last night’s frying affect kitchen air?',
+      'Which cooking method pollutes most in my kitchen?',
+      'Does using the exhaust fan actually reduce my exposure?',
+    ] },
+    { c: 4, sub: '4.2', name: 'Cleaning Behavior', queries: [
+      'Did my floor cleaner raise VOC levels?',
+      'What’s the safest time to clean given ventilation?',
+    ] },
+    { c: 4, sub: '4.3', name: 'Occupancy Patterns', queries: [
+      'Which room do I spend the most polluted hours in?',
+      'Am I spending too much time in the kitchen during cooking?',
+    ] },
+    { c: 4, sub: '4.4', name: 'Personal Pollution Signature', queries: [
+      'What does my daily exposure pattern look like?',
+      'What’s my “typical” pollution day compared to today?',
+    ] },
+    { c: 4, sub: '4.5', name: 'Routine Scheduling', queries: [
+      'Best time to cook to minimize exposure?',
+      'When should I ventilate today?',
+    ] },
+    { c: 4, sub: '4.6', name: 'Behavior-change Tracking', queries: [
+      'Have I cut high-VOC product use this month?',
+      'Am I cooking fried food less often than last month?',
+    ] },
+    { c: 4, sub: '4.7', name: 'Long-term Reporting & Goal-Setting', queries: [
+      'Give me my weekly exposure and health summary.',
+      'Has her asthma frequency tracked seasonal air quality?',
+      'Am I on track with this month’s air-quality goals?',
+    ] },
+    { c: 4, sub: '4.8', name: 'Cooking Chronicles', queries: [
+      'Is the dish cooked properly, or is it overcooked or undercooked?',
+      'How healthy is the food being cooked?',
+      'Is this food suitable for people of all ages?',
+      'Which kinds of people would benefit from this food?',
+    ] },
+
+    { c: 5, sub: '5.1', name: 'Device Placement', queries: [
+      'Where should I place my new air purifier?',
+      'Where should I add another sensor for coverage?',
+    ] },
+    { c: 5, sub: '5.2', name: 'Operating Mode/Configuration', queries: [
+      'What fan speed should the purifier run at now?',
+      'Purifier or open window right now?',
+    ] },
+    { c: 5, sub: '5.3', name: 'Coverage Gaps', queries: [
+      'Are there rooms my sensors don’t cover?',
+    ] },
+    { c: 5, sub: '5.4', name: 'Source Mitigation', queries: [
+      'What are the top 3 pollution sources I should address?',
+      'How do I reduce VOC from my cleaning routine?',
+      'Should I switch cooking fuel?',
+    ] },
+    { c: 5, sub: '5.5', name: 'Financial/Resource Optimization', queries: [
+      'What’s the energy cost of running the purifier continuously?',
+      'When should I replace the purifier filter?',
+      'Do I need a second purifier for the bedroom?',
+    ] },
+
+    { c: 6, sub: '6.1', name: 'Short-term Forecast', queries: [
+      'Will air quality worsen after I start cooking?',
+      'Will humidity spike if I run a hot shower with the door closed?',
+    ] },
+    { c: 6, sub: '6.2', name: 'Preemptive Suggestion', queries: [
+      'Should I close windows before evening traffic?',
+    ] },
+    { c: 6, sub: '6.3', name: 'Threshold Alerting', queries: [
+      'Warn me if VOC exceeds a safe level while I clean.',
+    ] },
+    { c: 6, sub: '6.4', name: 'Acute Hazard Detection', queries: [
+      'Is there a gas leak or CO risk right now?',
+      'Is today’s smoke event dangerous for my household?',
+    ] },
+    { c: 6, sub: '6.5', name: 'Escalation Guidance', queries: [
+      'Should I seek medical attention for these symptoms?',
+    ] },
+
+    { c: 7, sub: '7.1', name: 'Confidence/Uncertainty', queries: [
+      'How confident are you in this recommendation?',
+    ] },
+    { c: 7, sub: '7.2', name: 'Data & Privacy', queries: [
+      'Who can see my exposure data?',
+    ] },
+    { c: 7, sub: '7.3', name: 'Device Health/Calibration', queries: [
+      'Is the sensor working correctly? When was it last calibrated?',
+    ] },
   ];
 
+  const QUERIES = [];
+  TAXONOMY.forEach((s) => {
+    const groups = s.facets ? Object.entries(s.facets) : [[null, s.queries]];
+    let n = 0;
+    groups.forEach(([facet, list]) => list.forEach((text) => {
+      n += 1;
+      QUERIES.push({
+        id: `q${s.sub.replace('.', '_')}_${String(n).padStart(2, '0')}`,
+        c: s.c, sub: s.sub, subName: s.name, facet, text,
+      });
+    }));
+  });
+
   /* ---------------- Section F ---------------- */
+  // Removed 2026-10-29: PE1, SI2, FC1, FC2, BI1, BI2 and the ATT attention
+  // check; the F2 demand question, F3 price block and F4 waitlist also went.
   const UTAUT = [
-    { id: 'PE1', con: 'Performance expectancy', text: 'I would find the air-quality assistant useful in my daily life.' },
     { id: 'PE2', con: 'Performance expectancy', text: 'Using the assistant would help me keep my home’s air healthier.' },
     { id: 'PE3', con: 'Performance expectancy', text: 'Using the assistant would help me act on air problems more quickly.' },
     { id: 'EE1', con: 'Effort expectancy', text: 'Learning to use the assistant would be easy for me.' },
     { id: 'EE2', con: 'Effort expectancy', text: 'Asking the assistant questions by voice or text would be clear and understandable.' },
     { id: 'EE3', con: 'Effort expectancy', text: 'Wearing the device every day would be easy for me.' },
     { id: 'SI1', con: 'Social influence', text: 'People who are important to me would think I should use such an assistant.' },
-    { id: 'SI2', con: 'Social influence', text: 'My doctor or my family members’ doctors would encourage using it.' },
-    { id: 'FC1', con: 'Facilitating conditions', text: 'I have the phone, internet and charging access needed to use the assistant.' },
-    { id: 'FC2', con: 'Facilitating conditions', text: 'Help would be available to me if I had trouble using it.' },
     { id: 'CO1', con: 'Compatibility', text: 'Using the assistant would fit well with how my household lives.' },
     { id: 'PV1', con: 'Price value', text: 'At a reasonable price, the assistant would be good value for money.', pricing: true },
-    { id: 'BI1', con: 'Behavioral intention', text: 'If available, I intend to use the assistant in the next 6 months.' },
-    { id: 'BI2', con: 'Behavioral intention', text: 'I would recommend it to a family member or friend.' },
-    { id: 'ATT', con: 'Attention check', text: 'To show you are reading, please select “Somewhat disagree”.' },
-  ];
-  const VAN_WESTENDORP = [
-    { id: 'F3_1', q: 'At what price would it be so expensive that you would not consider buying it?', tag: 'Too expensive' },
-    { id: 'F3_2', q: 'At what price would it be getting expensive, but you would still consider it?', tag: 'Getting expensive' },
-    { id: 'F3_3', q: 'At what price would it be a bargain, a great buy for the money?', tag: 'A bargain' },
-    { id: 'F3_4', q: 'At what price would it be so cheap that you would doubt its quality?', tag: 'Too cheap' },
   ];
 
   /* ---------------- Section G ---------------- */
@@ -261,6 +447,6 @@ window.SURVEY = (function () {
 
   return {
     AGREE7, SECTIONS, CLUSTERS, A, VIGNETTES, FREQ, FREQ_NA, JUSTER, BENEFITS,
-    KANO, KANO_OPTS, MAXDIFF, QUERIES, UTAUT, VAN_WESTENDORP, G,
+    KANO, KANO_OPTS, MAXDIFF, TAXONOMY, QUERIES, UTAUT, G,
   };
 })();
