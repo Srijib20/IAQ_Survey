@@ -246,6 +246,9 @@
     return `<input class="field" data-q="${key}" value="${esc(S.answers[key] || '')}" placeholder="${esc(ph)}" maxlength="200" />`;
   }
 
+  // Whole-survey estimate, rounded the same way as the countdown in the top bar
+  const TOTAL_MIN = Math.round(D.SECTIONS.reduce((t, x) => t + x.minutes, 0));
+
   const AGREE = { anchors: ['Strongly disagree', 'Strongly agree'], labels: D.AGREE7 };
   const JUSTER = { start: 0, juster: true, anchors: ['No chance', 'Certain'], labels: D.JUSTER };
 
@@ -720,7 +723,7 @@
     // Time left: each section's budget spread evenly over its screens
     const per = (x) => (x.sec ? sectionByKey(x.sec).minutes / SCREENS.filter((y) => y.sec === x.sec).length : 0);
     const left = SCREENS.slice(S.screen).reduce((t, x) => t + per(x), 0);
-    $('#timeLeft').textContent = left < 1 ? 'Under a minute left' : `About ${Math.ceil(left)} min left`;
+    $('#timeLeft').textContent = left < 1 ? 'Under a minute left' : `About ${Math.round(left)} min left`;
 
     const pct = Math.round(((S.screen - 1) / (SCREENS.length - 2)) * 100);
     $('#navCount').textContent = `${Math.max(0, pct)}% done`;
@@ -754,7 +757,7 @@
           <h1>How does the air in your home <em>feel</em> to you?</h1>
           <p class="sub">We’re designing a wearable assistant you could ask about indoor air and health — by voice or text. Share your real experiences and help decide what it should do.</p>
           <div class="meta-chips">
-            <span class="meta-chip">${icon('clock')} About 15 minutes</span>
+            <span class="meta-chip">${icon('clock')} About ${TOTAL_MIN} minutes</span>
             <span class="meta-chip">${icon('lock')} Anonymous</span>
             <span class="meta-chip">${icon('phone')} Works on your phone</span>
             ${CFG.incentiveText ? `<span class="meta-chip">${icon('gift')} ${esc(CFG.incentiveText)}</span>` : ''}
@@ -779,7 +782,7 @@
       </div>
       <div class="card consent-card" id="consent">
         <h3>Before we begin</h3>
-        <div class="consent-text"><p>We are researchers at the UbiNet Lab, IIT Kharagpur, studying how people deal with the air inside their homes. We are designing a wearable assistant that you could ask questions about indoor air and health, by voice or text. This survey takes about 15–18 minutes. There are no right or wrong answers; we want to know about your real experiences. Participation is voluntary, you may stop at any time, and your answers are stored without your name. [Ethics approval no. ${esc(CFG.ethicsApprovalNo)}]</p></div>
+        <div class="consent-text"><p>We are researchers at the UbiNet Lab, IIT Kharagpur, studying how people deal with the air inside their homes. We are designing a wearable assistant that you could ask questions about indoor air and health, by voice or text. This survey takes about ${TOTAL_MIN} minutes. There are no right or wrong answers; we want to know about your real experiences. Participation is voluntary, you may stop at any time, and your answers are stored without your name. [Ethics approval no. ${esc(CFG.ethicsApprovalNo)}]</p></div>
         <button type="button" class="check${a.consent ? ' on' : ''}" data-action="consent" aria-pressed="${!!a.consent}">
           <span class="mark">${TICK}</span><span>I am 18 or older and agree to take part.</span>
         </button>
