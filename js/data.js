@@ -19,6 +19,8 @@ window.SURVEY_CONFIG = {
 
   pricingInScope: true, // shows the PV1 price-value statement in Section F
   askTopBenefit: true, // optional sixth item in Section C
+  // Clusters asked about in Section C. System Trust & Meta (7) was dropped.
+  benefitClusters: [1, 2, 3, 4, 5, 6],
   kanoTotal: 14, // pairs per respondent (cap 20); pilot may cut to 10
   cardSortCount: 15, // queries each respondent sorts in E1
   // Queries drawn from every cluster before the rest are filled at random.
@@ -38,7 +40,7 @@ window.SURVEY = (function () {
       intro: 'A few quick questions about you and your home.' },
     { key: 'B', label: 'Your experiences', minutes: 2.0, icon: 'clock',
       intro: 'Think back over the past 4 weeks. We want to hear about real moments, not hypotheticals.' },
-    { key: 'C', label: 'Benefits', minutes: 1.5, icon: 'sparkle',
+    { key: 'C', label: 'Benefits', minutes: 1.3, icon: 'sparkle',
       intro: 'For each kind of help, tell us how useful it would be — and how well you manage today.' },
     { key: 'D', label: 'Features', minutes: 5.0, icon: 'sliders',
       intro: 'Quick reactions to possible features, then a few “most vs least useful” choices.' },
@@ -110,6 +112,9 @@ window.SURVEY = (function () {
       scale: 5, anchors: ['Not at all', 'Very comfortable'] },
     A11: { q: 'What is your gender?', optional: true,
       opts: ['Woman', 'Man', 'Non-binary', 'Prefer to self-describe', 'Prefer not to say'] },
+    // Added after the draft, so it keeps the next free code; shown on the first A screen.
+    A12: { q: 'What country are you from?', top: ['India'], other: 'Prefer not to say',
+      opts: ('Afghanistan|Albania|Algeria|Andorra|Angola|Antigua and Barbuda|Argentina|Armenia|Australia|Austria|Azerbaijan|Bahamas|Bahrain|Bangladesh|Barbados|Belarus|Belgium|Belize|Benin|Bhutan|Bolivia|Bosnia and Herzegovina|Botswana|Brazil|Brunei|Bulgaria|Burkina Faso|Burundi|Cambodia|Cameroon|Canada|Cape Verde|Central African Republic|Chad|Chile|China|Colombia|Comoros|Congo|Costa Rica|Côte d’Ivoire|Croatia|Cuba|Cyprus|Czechia|Democratic Republic of the Congo|Denmark|Djibouti|Dominica|Dominican Republic|Ecuador|Egypt|El Salvador|Equatorial Guinea|Eritrea|Estonia|Eswatini|Ethiopia|Fiji|Finland|France|Gabon|Gambia|Georgia|Germany|Ghana|Greece|Grenada|Guatemala|Guinea|Guinea-Bissau|Guyana|Haiti|Honduras|Hungary|Iceland|India|Indonesia|Iran|Iraq|Ireland|Israel|Italy|Jamaica|Japan|Jordan|Kazakhstan|Kenya|Kiribati|Kuwait|Kyrgyzstan|Laos|Latvia|Lebanon|Lesotho|Liberia|Libya|Liechtenstein|Lithuania|Luxembourg|Madagascar|Malawi|Malaysia|Maldives|Mali|Malta|Marshall Islands|Mauritania|Mauritius|Mexico|Micronesia|Moldova|Monaco|Mongolia|Montenegro|Morocco|Mozambique|Myanmar|Namibia|Nauru|Nepal|Netherlands|New Zealand|Nicaragua|Niger|Nigeria|North Korea|North Macedonia|Norway|Oman|Pakistan|Palau|Palestine|Panama|Papua New Guinea|Paraguay|Peru|Philippines|Poland|Portugal|Qatar|Romania|Russia|Rwanda|Saint Kitts and Nevis|Saint Lucia|Saint Vincent and the Grenadines|Samoa|San Marino|São Tomé and Príncipe|Saudi Arabia|Senegal|Serbia|Seychelles|Sierra Leone|Singapore|Slovakia|Slovenia|Solomon Islands|Somalia|South Africa|South Korea|South Sudan|Spain|Sri Lanka|Sudan|Suriname|Sweden|Switzerland|Syria|Taiwan|Tajikistan|Tanzania|Thailand|Timor-Leste|Togo|Tonga|Trinidad and Tobago|Tunisia|Turkey|Turkmenistan|Tuvalu|Uganda|Ukraine|United Arab Emirates|United Kingdom|United States|Uruguay|Uzbekistan|Vanuatu|Vatican City|Venezuela|Vietnam|Yemen|Zambia|Zimbabwe').split('|') },
   };
 
   /* ---------------- Section B ---------------- */

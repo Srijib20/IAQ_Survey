@@ -20,6 +20,7 @@ Edit `window.SURVEY_CONFIG` at the top of `js/data.js`:
 | `ethicsApprovalNo` | Shown in the consent text. |
 | `incentiveText` | e.g. `'₹150–200 voucher'`; shown on the landing page if set. |
 | `pricingInScope` | Shows the PV1 price-value statement in Section F. |
+| `benefitClusters` | Clusters asked about in Section C (default 1–6; System Trust & Meta is left out). |
 | `kanoTotal` | Kano pairs per respondent (14 by default; cut to 10 if the pilot runs long). |
 
 The card-sort pool is the `TAXONOMY` list in `js/data.js` (from `Taxonomy.txt`: 7 domains, 37 sub-clusters, 110 queries). Each query gets an id such as `q1_1_05` (sub-cluster 1.1, 5th query); keep the order stable once data collection starts, or ids will shift.

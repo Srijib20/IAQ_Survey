@@ -8,7 +8,7 @@
   const CFG = window.SURVEY_CONFIG;
   const STATE_KEY = 'iaq-survey-v1';
   const SUB_KEY = 'iaq-survey-submissions';
-  const INSTRUMENT_VERSION = 'first-draft-2026-09-23/taxonomy-2026-10-29';
+  const INSTRUMENT_VERSION = 'first-draft-2026-09-23/rev-2026-10-29b';
   const params = new URLSearchParams(location.search);
   const DEBUG = params.has('debug');
 
@@ -146,7 +146,8 @@
     const cards = pickCards();
     const utaut = shuffle(D.UTAUT.filter((u) => !u.pricing || CFG.pricingInScope).map((u) => u.id));
 
-    return { orderB: shuffle(ids), orderC: shuffle(ids), kano, maxdiff, cards, utaut };
+    const orderC = shuffle(ids.filter((c) => (CFG.benefitClusters || ids).includes(c)));
+    return { orderB: shuffle(ids), orderC, kano, maxdiff, cards, utaut };
   }
 
   // Closed card sort: `cardSortPerCluster` random queries from each cluster,
@@ -229,6 +230,18 @@
   function textArea(key, ph = '') {
     return `<textarea class="field" data-q="${key}" placeholder="${esc(ph)}" maxlength="2000" rows="3">${esc(S.answers[key] || '')}</textarea>`;
   }
+  // Dropdown for long lists. o: opts, top (pinned first), other (pinned last)
+  function select(key, o, ph = '') {
+    const a = S.answers[key];
+    const opt = (v) => `<option value="${esc(v)}"${a === v ? ' selected' : ''}>${esc(v)}</option>`;
+    const top = o.top || [];
+    return `<select class="field" data-q="${key}" required>
+      <option value=""${a ? '' : ' selected'} disabled>${esc(ph)}</option>
+      ${top.map(opt).join('')}${top.length ? '<option disabled>──────────</option>' : ''}
+      ${o.opts.filter((v) => !top.includes(v)).map(opt).join('')}
+      ${o.other ? '<option disabled>──────────</option>' + opt(o.other) : ''}
+    </select>`;
+  }
   function textInput(key, ph = '') {
     return `<input class="field" data-q="${key}" value="${esc(S.answers[key] || '')}" placeholder="${esc(ph)}" maxlength="200" />`;
   }
@@ -274,10 +287,11 @@
         `<div class="card">
           ${q('A1', D.A.A1.q, choices('A1', D.A.A1.opts, { cols: 2 }), { code: 'A1' })}
           ${q('A2', D.A.A2.q, choices('A2', D.A.A2.opts, { cols: 2 }), { code: 'A2' })}
+          ${q('A12', D.A.A12.q, select('A12', D.A.A12, 'Select your country'), { code: 'A12' })}
           ${q('A3', D.A.A3.q, choices('A3', D.A.A3.opts, { cols: 2 }), { code: 'A3' })}
           ${q('A4', D.A.A4.q, segmented('A4', D.A.A4.opts), { code: 'A4' })}
         </div>`,
-      required: () => ['A1', 'A2', 'A3', 'A4'],
+      required: () => ['A1', 'A2', 'A12', 'A3', 'A4'],
       check: (a) => (a.A1 === 'Under 18' ? 'screenout' : null),
     });
     L.push({
@@ -964,7 +978,7 @@
 
   app.addEventListener('input', (e) => {
     const el = e.target;
-    if (!el.matches('input[data-q], textarea[data-q]')) return;
+    if (!el.matches('input[data-q], textarea[data-q], select[data-q]')) return;
     let v = el.value;
     if (el.type === 'number') v = v === '' ? null : Number(v);
     S.answers[el.dataset.q] = v;
@@ -1017,7 +1031,7 @@
       secondsByScreen: Object.fromEntries(Object.entries(S.times).map(([k, v]) => [k, Math.round(v / 100) / 10])),
       recruitment: assignGroup(a),
       design: S.design,
-      config: { pricingInScope: CFG.pricingInScope, askTopBenefit: CFG.askTopBenefit, kanoTotal: CFG.kanoTotal, cardSortPerCluster: CFG.cardSortPerCluster },
+      config: { pricingInScope: CFG.pricingInScope, askTopBenefit: CFG.askTopBenefit, kanoTotal: CFG.kanoTotal, cardSortPerCluster: CFG.cardSortPerCluster, benefitClusters: CFG.benefitClusters },
       answers: a,
       client: { userAgent: navigator.userAgent, language: navigator.language, screen: `${screen.width}x${screen.height}` },
     };
@@ -1168,6 +1182,8 @@
     }
     // ...or an item that has since been removed from Section F
     S.design.utaut = S.design.utaut.filter((id) => D.UTAUT.some((u) => u.id === id));
+    // ...or a cluster that has since been dropped from Section C
+    S.design.orderC = S.design.orderC.filter((c) => (CFG.benefitClusters || [c]).includes(c));
     if (DEBUG && params.has('fresh')) { S = freshState(); SAVED = false; }
     SCREENS = buildScreens();
     if (DEBUG && params.has('screen')) {

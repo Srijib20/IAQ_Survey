@@ -226,6 +226,11 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: -.02
 }
 .field:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 4px rgba(15, 139, 125, .12); }
 textarea.field { min-height: 96px; }
+select.field {
+  appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 40px; color: var(--ink);
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center / 16px;
+}
+select.field:invalid, select.field option[value=""] { color: var(--muted); }
 .inline-field { margin-top: 10px; }
 
 /* Consent checkbox */
